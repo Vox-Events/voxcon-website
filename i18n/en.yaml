@@ -1,0 +1,6 @@
+path: en
+name: English
+default: true
+translations:
+  site_title: Awesome site
+  welcome_msg: Welcome to Awesome site!
