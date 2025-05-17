@@ -8,6 +8,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/fsnotify/fsnotify"
 	"gopkg.in/yaml.v3"
@@ -72,6 +73,8 @@ func watch() error {
 		return err
 	}
 	for {
+		time.Sleep(50 * time.Millisecond)
+		flush(watcher.Events)
 		err = build()
 		if err != nil {
 			fmt.Println("error building:", err)
@@ -87,6 +90,16 @@ func watch() error {
 				return fmt.Errorf("file watcher unexpectedly closed")
 			}
 			return err
+		}
+	}
+}
+
+func flush(ch chan fsnotify.Event) {
+	for {
+		select {
+		case <-ch:
+		default:
+			return
 		}
 	}
 }
