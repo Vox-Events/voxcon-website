@@ -51,11 +51,23 @@ func watch() error {
 		return err
 	}
 	defer watcher.Close()
-	err = watcher.Add("../i18n")
+	walker := func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		if d.IsDir() {
+			err = watcher.Add(path)
+			if err != nil {
+				return err
+			}
+		}
+		return nil
+	}
+	err = filepath.WalkDir("../i18n", walker)
 	if err != nil {
 		return err
 	}
-	err = watcher.Add("../src")
+	err = filepath.WalkDir("../src", walker)
 	if err != nil {
 		return err
 	}
