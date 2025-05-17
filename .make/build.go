@@ -176,7 +176,13 @@ func renderSite(data TemplateData) error {
 		return err
 	}
 
-	tmpl, err := template.ParseGlob("../src/partials/*.html")
+	tmpl := template.New("")
+	tmpl.Funcs(template.FuncMap{
+		"i18n": func(key string) string {
+			return data.Translations[key]
+		},
+	})
+	tmpl, err = tmpl.ParseGlob("../src/partials/*.html")
 	if err != nil {
 		return err
 	}
