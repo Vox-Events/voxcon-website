@@ -1,0 +1,32 @@
+<section class="px-32 py-16 text-center">
+  <h1 class="text-4xl mb-4">What is voxcon</h1>
+  <p>Lorem ipsum dolor, sit amet consectetur adipisicing elit. Impedit, alias! Eaque eius earum mollitia animi, quaerat, dicta fugit officia maiores explicabo amet reprehenderit ut ab deserunt voluptatum iusto dolorem error.</p>
+</section>
+<section class="px-32 py-16 text-center">
+  <h1 class="text-4xl mb-4">Will I have fun?</h1>
+  <p>Lorem ipsum dolor, sit amet consectetur adipisicing elit. Impedit, alias! Eaque eius earum mollitia animi, quaerat, dicta fugit officia maiores explicabo amet reprehenderit ut ab deserunt voluptatum iusto dolorem error.</p>
+</section>
+<section class="px-32 py-16 text-center">
+  <h1 class="text-4xl mb-4">What are furries</h1>
+  <p>Lorem ipsum dolor, sit amet consectetur adipisicing elit. Impedit, alias! Eaque eius earum mollitia animi, quaerat, dicta fugit officia maiores explicabo amet reprehenderit ut ab deserunt voluptatum iusto dolorem error.</p>
+</section>
+<section class="px-32 py-16 text-center">
+  <h1 class="text-4xl mb-4">FAQ</h1>
+  <p>Lorem ipsum dolor, sit amet consectetur adipisicing elit. Impedit, alias! Eaque eius earum mollitia animi, quaerat, dicta fugit officia maiores explicabo amet reprehenderit ut ab deserunt voluptatum iusto dolorem error.</p>
+</section>
+<section class="px-32 py-16 text-center">
+  <h1 class="text-4xl mb-4">Who are we</h1>
+  <div class="flex justify-center align-center flex-wrap gap-4">
+    {{range $member := .Extra.staff}}
+    <div>
+      {{if index $member "img"}}
+      <img class="h-48 rounded-full" src="/avatars/{{$member.img}}" alt="">
+      {{else}}
+      <div class="h-48 w-48 rounded-full bg-neutral-800"></div>
+      {{end}}
+      <h4 class="text-lg font-bold">{{$member.name}}</h4>
+      <p>{{$member.does}}</p>
+    </div>
+    {{end}}
+  </div>
+</section>

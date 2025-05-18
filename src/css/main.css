@@ -1,1 +1,10 @@
 @import "tailwindcss";
+@import "./icons.css";
+
+.bg-gradient-spectrum {
+  background-image: linear-gradient(135deg,var(--color-blue-600),var(--color-purple-600),var(--color-orange-500),var(--color-yellow-200) 100%);
+}
+
+.dropdown:focus-within .dropdown-menu, .dropdown:hover .dropdown-menu {
+  display:block;
+}
