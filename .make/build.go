@@ -136,6 +136,7 @@ func build() error {
 		}
 	}
 
+	fmt.Println("syncing static files")
 	cmd := exec.Command("rsync", "-a", "src/static/", "build")
 	cmd.Dir = ".."
 	err = cmd.Run()
@@ -143,6 +144,7 @@ func build() error {
 		return err
 	}
 
+	fmt.Println("rendering CSS")
 	cmd = exec.Command("npx", "@tailwindcss/cli", "-i", "../src/css/main.css", "-o", "main.css")
 	cmd.Dir = "../build"
 	err = cmd.Run()
