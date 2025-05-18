@@ -16,7 +16,7 @@ import (
 
 type I18nID struct {
 	Name    string `yaml:"name"`
-	Path    string `yaml:"path"`
+	Code    string `yaml:"code"`
 	Default bool   `yaml:"default" default:"false"`
 }
 type I18nFile struct {
@@ -27,6 +27,7 @@ type TemplateData struct {
 	Languages    []I18nID
 	Currentlang  I18nID
 	Translations map[string]string
+	Extra        any
 }
 
 func main() {
@@ -110,21 +111,20 @@ func build() error {
 		return err
 	}
 	i18nids := []I18nID{}
-	defaultlang := I18nID{}
 	defaulttranslations := map[string]string{}
 	for _, f := range i18nfiles {
 		i18nids = append(i18nids, f.I18nID)
-		if f.Default {
-			if defaultlang.Default {
-				panic(fmt.Errorf("cannot have more than one default language, '%s' and '%s' both marked default", defaultlang.Name, f.Name))
-			}
-			defaultlang = f.I18nID
-			defaulttranslations = f.Translations
-		}
 	}
 
+	b, err := os.ReadFile("../src/data.yaml")
+	if err != nil {
+		return err
+	}
+	extradata := make(map[string]interface{})
+	yaml.Unmarshal(b, &extradata)
+
 	for _, lang := range i18nfiles {
-		templateData := TemplateData{i18nids, lang.I18nID, lang.Translations}
+		templateData := TemplateData{i18nids, lang.I18nID, lang.Translations, extradata}
 		for k, v := range defaulttranslations {
 			if _, exist := templateData.Translations[k]; !exist {
 				templateData.Translations[k] = v
@@ -136,7 +136,14 @@ func build() error {
 		}
 	}
 
-	cmd := exec.Command("npx", "@tailwindcss/cli", "-i", "../src/css/main.css", "-o", "main.css")
+	cmd := exec.Command("rsync", "-a", "src/static/", "build")
+	cmd.Dir = ".."
+	err = cmd.Run()
+	if err != nil {
+		return err
+	}
+
+	cmd = exec.Command("npx", "@tailwindcss/cli", "-i", "../src/css/main.css", "-o", "main.css")
 	cmd.Dir = "../build"
 	err = cmd.Run()
 	if err != nil {
@@ -154,12 +161,16 @@ func readI18nFiles() ([]I18nFile, error) {
 	}
 	for _, f := range i18npaths {
 		if !f.IsDir() {
-			f, err := os.ReadFile("../i18n/" + f.Name())
+			b, err := os.ReadFile("../i18n/" + f.Name())
 			if err != nil {
 				return nil, err
 			}
 			i18n := I18nFile{}
-			yaml.Unmarshal(f, &i18n)
+			yaml.Unmarshal(b, &i18n)
+			if i18n.Code == "" {
+				code, _, _ := strings.Cut(f.Name(), ".")
+				i18n.Code = code
+			}
 			i18nfiles = append(i18nfiles, i18n)
 		}
 	}
@@ -169,7 +180,7 @@ func readI18nFiles() ([]I18nFile, error) {
 func renderSite(data TemplateData) error {
 	builddir := "../build"
 	if !data.Currentlang.Default {
-		builddir += "/" + data.Currentlang.Path
+		builddir += "/" + data.Currentlang.Code
 	}
 	err := os.MkdirAll(builddir, os.ModePerm)
 	if err != nil {
@@ -180,6 +191,13 @@ func renderSite(data TemplateData) error {
 	tmpl.Funcs(template.FuncMap{
 		"i18n": func(key string) string {
 			return data.Translations[key]
+		},
+		"i18nhref": func(href string) string {
+			if data.Currentlang.Default {
+				return href
+			} else {
+				return "/" + data.Currentlang.Code + href
+			}
 		},
 	})
 	tmpl, err = tmpl.ParseGlob("../src/partials/*.html")
@@ -201,8 +219,13 @@ func renderSite(data TemplateData) error {
 			if err != nil {
 				return err
 			}
-			fmt.Printf("rendering [%s] %s\n", data.Currentlang.Path, path)
-			f, err := os.Create(strings.Replace(path, "../src/content", builddir, 1))
+			fmt.Printf("rendering [%s] %s\n", data.Currentlang.Code, path)
+			target := strings.Replace(path, "../src/content", builddir, 1)
+			lastslash := strings.LastIndex(target, "/")
+			if lastslash != -1 {
+				os.MkdirAll(target[0:lastslash], fs.ModePerm)
+			}
+			f, err := os.Create(target)
 			if err != nil {
 				return err
 			}
